@@ -1,0 +1,13 @@
+.themify_builder_module_panel .module-type-contact:before {
+	content: "\e75a";
+}
+table.contact_fields {
+	width: 100%;
+}
+table.contact_fields th {
+	text-align: left;
+	padding-bottom: 20px;
+}
+table.contact_fields td {
+	vertical-align: top;
+}
