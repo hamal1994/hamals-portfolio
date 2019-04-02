@@ -16,7 +16,7 @@
  * which you should also make sure you .gitignore.
  */
 define('WP_CACHE', true);
-define( 'WPCACHEHOME', '/srv/bindings/d288db33179e42ca845695efd364613b/code/wp-content/plugins/wp-super-cache/' );
+define( 'WPCACHEHOME', '/srv/bindings/6fc71455ec204d378e07a3b42118d440/code/wp-content/plugins/wp-super-cache/' );
 if (file_exists(dirname(__FILE__) . '/wp-config-local.php') && !isset($_ENV['PANTHEON_ENVIRONMENT'])):
   # IMPORTANT: ensure your local config does not include wp-settings.php
   require_once(dirname(__FILE__) . '/wp-config-local.php');
