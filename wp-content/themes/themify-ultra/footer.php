@@ -125,7 +125,7 @@
 					<!-- /#footer -->
 
 					<?php themify_footer_after(); // hook ?>
-
+					<?php echo "bye"; ?>
 				</div>
 				<!-- /#footerwrap -->
 			<?php endif; // exclude footer ?>
