@@ -9,7 +9,7 @@
 	<meta charset="<?php bloginfo( 'charset' ); ?>" />
 	<!-- wp_head -->
 	<?php wp_head(); ?>
-
+	<?php echo "hello"; ?>
 </head>
 
 <body <?php body_class(); ?>>
