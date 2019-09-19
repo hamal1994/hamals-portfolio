@@ -6,3 +6,8 @@ Template: themify-ultra
 */
 
 /* write custom css below */
+@media print {
+    span.heading.main-head {
+        display: none!important;
+    }
+ }
