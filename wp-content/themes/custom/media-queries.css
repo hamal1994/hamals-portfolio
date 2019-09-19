@@ -3,3 +3,6 @@
         display: none!important;
     }
  }
+ span.heading.main-head {
+    display: none!important;
+}
