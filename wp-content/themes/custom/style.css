@@ -6,3 +6,6 @@ Template: themify-ultra
 */
 
 /* write custom css below */
+span.heading.main-head {
+    display: none;
+}
