@@ -15,11 +15,6 @@
  * keep your config separate, we recommend using a 'wp-config-local.php' file,
  * which you should also make sure you .gitignore.
  */
-define('WP_CACHE', true);
-define( 'WPCACHEHOME', '/srv/bindings/6fc71455ec204d378e07a3b42118d440/code/wp-content/plugins/wp-super-cache/' );
-if (file_exists(dirname(__FILE__) . '/wp-config-local.php') && !isset($_ENV['PANTHEON_ENVIRONMENT'])):
-  # IMPORTANT: ensure your local config does not include wp-settings.php
-  require_once(dirname(__FILE__) . '/wp-config-local.php');
 
 /**
  * Pantheon platform settings. Everything you need should already be set.
