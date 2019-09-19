@@ -1,5 +1,5 @@
 @media print {
     span.heading.main-head {
-        display: none;
+        display: none!important;
     }
  }
