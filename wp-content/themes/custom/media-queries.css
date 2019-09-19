@@ -1,5 +1,5 @@
 @media print {
-    #headerwrap, #footerwrap {
+    #headerwrap {
         display: none;
     }
  }
