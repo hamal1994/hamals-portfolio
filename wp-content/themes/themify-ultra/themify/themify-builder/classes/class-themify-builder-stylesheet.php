@@ -1201,17 +1201,17 @@ class Themify_Builder_Stylesheet {
 
 		$path = "$before[$mode]/themify-css";
 
-		if ('bydir' == $mode) {
-			if (!function_exists('WP_Filesystem')) {
-				require_once ABSPATH . 'wp-admin/includes/file.php';
-			}
-			WP_Filesystem();
-			global $wp_filesystem;
-			$dir_exists = $wp_filesystem->is_dir($path);
-			if (!$dir_exists) {
-				$dir_exists = $wp_filesystem->mkdir($path, FS_CHMOD_DIR);
-			}
-		}
+		// if ('bydir' == $mode) {
+		// 	if (!function_exists('WP_Filesystem')) {
+		// 		require_once ABSPATH . 'wp-admin/includes/file.php';
+		// 	}
+		// 	WP_Filesystem();
+		// 	global $wp_filesystem;
+		// 	$dir_exists = $wp_filesystem->is_dir($path);
+		// 	if (!$dir_exists) {
+		// 		$dir_exists = $wp_filesystem->mkdir($path, FS_CHMOD_DIR);
+		// 	}
+		// }
 
 		$stylesheet = "$path/themify-builder-$single-generated.css";
 
