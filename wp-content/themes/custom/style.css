@@ -1,16 +1,11 @@
 /*
 Theme Name: custom
-Description: Custom theme for Themify Ultra
-Author: Hamal
+Description: Child theme for Themify Ultra
+Author: Themify
 Template: themify-ultra
 */
 
 /* write custom css below */
-
-
-
-@media print {
-    #headerwrap, #footerwrap {
-        display: none!important;
-    }
- }
+.heading main-head {
+  color: red !important;
+}
