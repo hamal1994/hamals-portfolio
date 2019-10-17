@@ -1,11 +1,6 @@
-/*
-Theme Name: custom
-Description: Child theme for Themify Ultra
-Author: Themify
-Template: themify-ultra
-*/
-
-/* write custom css below */
-.heading main-head {
-  color: red !important;
+@media print {
+  #headerwrap,
+  #footerwrap {
+    display: none !important;
+  }
 }
