@@ -1,1 +1,1 @@
-@media print{#headerwrap,#footerwrap,#sidebar,.post-nav.clearfix,#buttons-338-1-0-0,.related-posts,.commentwrap,.post-meta.entry-meta{display:none}@page{margin-left:170px}}
+@media print{#headerwrap,#footerwrap,#sidebar,.post-nav.clearfix,.related-posts,.commentwrap,.post-meta.entry-meta,.module-buttons,.post-image{display:none}@page{margin-left:170px}.post-content-inner{display:flex;flex-flow:column-reverse;margin-top:-200px}.post-title.entry-title.fancy-heading{order:1;margin-bottom:70px}.post-date-wrap{order:1}}
