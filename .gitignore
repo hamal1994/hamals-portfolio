@@ -68,3 +68,4 @@ hamals-portfolio_dev_2019-09-18T11-46-35_UTC_database.sql
 ## Ignore node_modules ##
 ################
 node_modules
+wp-config.php
