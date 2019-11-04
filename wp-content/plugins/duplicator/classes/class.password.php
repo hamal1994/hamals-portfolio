@@ -1,4 +1,5 @@
 <?php
+defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 #
 # Portable PHP password hashing framework.
 #
@@ -24,6 +25,10 @@
 # Obviously, since this code is in the public domain, the above are not
 # requirements (there can be none), but merely suggestions.
 #
+
+// Exit if accessed directly
+if (! defined('DUPLICATOR_VERSION')) exit;
+
 class DUP_PasswordHash
 {
 
@@ -218,10 +223,6 @@ class DUP_PasswordHash
 		if ($hash[0] === '*')
 			$hash = crypt($password, $stored_hash);
 
-		# This is not constant-time.  In order to keep the code simple,
-		# for timing safety we currently rely on the salts being
-		# unpredictable, which they are at least in the non-fallback
-		# cases (that is, when we use /dev/urandom and bcrypt).
 		return $hash === $stored_hash;
 	}
 }

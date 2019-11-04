@@ -1,8 +1,27 @@
+/**
+ * jQuery.loadScript
+ * @link http://marcbuils.github.io/jquery.loadscript/
+ */
+$(function(){var e=function(e,t,n){var r=document.createElement("script");r.type="text/javascript",r.readyState?r.onreadystatechange=function(){if(r.readyState=="loaded"||r.readyState=="complete")r.onreadystatechange=null,n()}:r.onload=function(){n()};var i=["type","src","htmlFor","event","charset","async","defer","crossOrigin","text","onerror"];if(typeof t=="object"&&!$.isEmptyObject(t))for(var s in t)t.hasOwnProperty(s)&&$.inArray(s,i)&&(r[s]=t[s]);r.src=e,document.getElementsByTagName(t.lazyLoad?"body":"head")[0].appendChild(r)};$.loadScript=function(t,n,r){arguments.length===2&&typeof arguments[1]=="function"&&(r=arguments[1],n={}),n=n||{};var i=$.Deferred();return typeof r=="function"&&i.done(function(){r()}),e(t,n,function(){i.resolve()}),i.promise()}});
+
 window.Themify_Metabox = (function($){
 
 	'use strict';
 
 	var api = {};
+
+	/**
+	 * A wrapper for $.loadScript, simplifies loading scripts conditionally
+	 */
+	api.loadScript = function( url, callback, condition ) {
+		if ( condition ) {
+			callback();
+		} else {
+			$.loadScript( url ).done( function() {
+				callback();
+			} );
+		}
+	}
 
 	api.init = function(){
 		this.bind_events();
@@ -23,6 +42,7 @@ window.Themify_Metabox = (function($){
 		api.post_meta_checkbox();
 
 		api.init_fields( $( 'body' ) );
+		api.pagination( $( 'body' ) );
 		api.audioRemoveAction();
 	},
 
@@ -57,7 +77,17 @@ window.Themify_Metabox = (function($){
 
 		api.layout( $context );
 		api.color_picker( $context );
-		api.date_picker( $context );
+
+		if ( $context.find( '.themifyDatePicker' ).length ) {
+			api.loadScript( TF_Metabox.includes_url + 'js/jquery/ui/datepicker.min.js', function() {
+				api.loadScript( TF_Metabox.includes_url + 'js/jquery/ui/slider.min.js', function() {
+					api.loadScript( TF_Metabox.url + 'js/jquery-ui-timepicker.min.js', function() {
+						api.date_picker( $context );
+					}, typeof $.ui.timepicker !== 'undefined' );
+				}, typeof $.fn.slider !== 'undefined' );
+			}, typeof $.fn.datepicker !== 'undefined' );
+		}
+
 		api.assignments( $context );
 		api.dropdownbutton( $context );
 
@@ -153,9 +183,7 @@ window.Themify_Metabox = (function($){
 				timeformat = $self.data('timeformat' ),
 				timeseparator = $self.data('timeseparator' );
 
-			( $.fn.themifyDatetimepicker 
-				? $.fn.themifyDatetimepicker 
-				: $.fn.datetimepicker ).call( $self, {
+			$.fn.datetimepicker.call( $self, {
 					showOn: 'both',
 					showButtonPanel: true,
 					closeButton: close,
@@ -636,6 +664,74 @@ window.Themify_Metabox = (function($){
 			});
 		});
 	}
+
+	api.pagination = function ($context) {
+		$context.on('click', '#themify_assignments_popup_show .themify-popup-visibility-tab', function(e) {
+			e.preventDefault();
+			var $this = $(this);
+			if ($this.data('active')) {
+				return;
+			}
+			var type = $this.data('type');
+			var tab = $this.parents('#themify_assignments_popup_show').find('.themify-assignment-type-options[data-type=' + type + ']');
+			var post_id = $('#popup_show-assignment-tab-pages').data('post-id');
+			jQuery.ajax({
+				url: ajaxurl,
+				type: 'post',
+				data: {
+					action: 'themify_create_inner_popup_page',
+					type: type,
+					post_id: post_id,
+				},
+				beforeSend: function() {
+					// tab.html('<div class="tb_slider_loader"></div>');
+				},
+				success: function(data){
+					tab.html(data);
+					$this.data('active', 'on');
+				}
+			});
+		});
+
+		$context.on('click', '.themify-assignment-pagination .page-numbers', function(e) {
+			e.preventDefault();
+			var $this = $(this);
+			var tab = $this.parents('.themify-assignment-options');
+			var items_inner = $this.parents('.themify-assignment-items-inner');
+			var pagination = $('.themify-assignment-pagination', items_inner);
+			var current_page = parseFloat($('.themify-assignment-pagination .current', items_inner).text());
+			var go_to_page = 1;
+			if ($this.hasClass('next')) {
+				go_to_page = current_page + 1;
+			} else if ($this.hasClass('prev')) {
+				go_to_page = current_page - 1;
+			} else if($this.hasClass('page-numbers')) {
+				go_to_page = parseFloat($this.text());
+			}
+			var inner_item = $('.themify-assignment-items-inner', tab);
+
+			$.ajax({
+				url: ajaxurl,
+				type: 'post',
+				data: {
+					action: 'themify_create_popup_page_pagination',
+					current_page: go_to_page,
+					num_of_pages: items_inner.data('pages'),
+				},
+				beforeSend: function() {
+					$('.tb_slider_loader', tab).remove();
+					$('.themify-assignment-items-page', items_inner).addClass('is-hidden');
+					pagination.hide();
+					inner_item.append('<div class="tb_slider_loader"></div>');
+				},
+				success: function(data) {
+					$('.tb_slider_loader', tab).remove();
+					$('.themify-assignment-items-page-' + go_to_page, items_inner).removeClass('is-hidden');
+					pagination.html(data).show();
+				}
+			});
+		});
+	};
 
 	function savePostMetaStates( $et ) {
 		var state = '';

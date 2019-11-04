@@ -19,10 +19,10 @@ class Themify_Portfolio_Post {
 		add_action( 'init', array( $this, 'register' ) );
 		add_filter( 'plugin_row_meta', array( $this, 'plugin_row_meta' ), 10, 2 );
 		include( $this->dir . 'includes/functions.php' );
+		add_filter( 'builder_is_portfolio_active', '__return_true' );
 
 		// compatibility mode: let the theme handle everything
 		if( THEMIFY_PORTFOLIO_POSTS_COMPAT_MODE == true ) {
-			add_filter( 'builder_is_portfolio_active', '__return_true' );
 			return;
 		}
 
@@ -66,10 +66,11 @@ class Themify_Portfolio_Post {
 	 * Register post type and taxonomy
 	 */
 	function register() {
+		$slugs = apply_filters( 'themify_portfolio_post_rewrite', array('post'=>'project','tax'=>'portfolio-category') );
 		$cpt = array(
 			'plural' => __( 'Portfolios', 'themify-portfolio-posts' ),
 			'singular' => __( 'Portfolio', 'themify-portfolio-posts' ),
-			'rewrite' => apply_filters( 'themify_portfolio_post_rewrite', 'project' ),
+			'rewrite' => empty($slugs['post']) ? apply_filters( 'themify_portfolio_rewrite', 'project' ) : $slugs['post'],
 		);
 		$post_type = array(
 			'labels' => array(
@@ -105,7 +106,7 @@ class Themify_Portfolio_Post {
 			'show_ui' => true,
 			'show_tagcloud' => true,
 			'hierarchical' => true,
-			'rewrite' => true,
+			'rewrite' => array( 'slug' => empty($slugs['tax']) ? apply_filters( 'themify_portfolio_rewrite', 'portfolio-category' ) : $slugs['tax'], 'with_front' => false ),
 			'query_var' => true
 		));
 	}

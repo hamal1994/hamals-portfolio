@@ -3,8 +3,8 @@ Contributors: themifyme
 Plugin Name: Themify Portfolio Post
 Tags: portfolio, post, showcase, post-type
 Requires at least: 4.5
-Tested up to: 4.9.5
-Stable tag: 1.0.8
+Tested up to: 5.2.2
+Stable tag: 1.1.2
 
 This plugin will add Portfolio post type.
 
@@ -24,4 +24,4 @@ Themify Portfolio Post plugin is compatible with any theme and users can install
 
 == Changelog ==
 
-The changelog is located at: https://themify.me/changelogs/themify-portfolio-post.txt
+[See the changelogs here](https://themify.me/changelogs/themify-portfolio-post.txt).

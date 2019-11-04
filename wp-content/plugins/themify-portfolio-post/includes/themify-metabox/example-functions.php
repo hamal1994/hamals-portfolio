@@ -73,8 +73,8 @@ function themify_metabox_example_meta_box_fields( $fields, $post_type ) {
 			'type' => 'dropdownbutton',
 			'states' => array(
 				array( 'value' => '', 'title' => __( 'Default', 'themify' ), 'icon' => '%s/ddbtn-blank.png', 'name' => __( 'Default', 'themify' ) ),
-				array( 'value' => 'yes', 'title' => __( 'Yes', 'themify' ), 'icon' => '%s/ddbtn-check.png', 'name' => __( 'Yes', 'themify' ) ),
-				array( 'value' => 'no', 'title' => __( 'No', 'themify' ), 'icon' => '%s/ddbtn-cross.png', 'name' => __( 'No', 'themify' ) ),
+				array( 'value' => 'yes', 'title' => __( 'Yes', 'themify' ), 'icon' => '%s/ddbtn-check.svg', 'name' => __( 'Yes', 'themify' ) ),
+				array( 'value' => 'no', 'title' => __( 'No', 'themify' ), 'icon' => '%s/ddbtn-cross.svg', 'name' => __( 'No', 'themify' ) ),
 			),
 			'description' => __( 'Similar to "dropdown" field, but allows setting custom icons for each state.', 'themify' ),
 		),

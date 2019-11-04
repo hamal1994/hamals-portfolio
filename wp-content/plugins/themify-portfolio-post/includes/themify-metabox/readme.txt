@@ -3,8 +3,8 @@ Contributors: themifyme
 Plugin Name: Themify Metabox
 Tags: metabox, meta-box, fields, settings, option, custom-fields, admin
 Requires at least: 3.0
-Tested up to: 4.6
-Stable tag: 1.0.2
+Tested up to: 5.1
+Stable tag: 1.0.4
 
 Metabox creation tool with advanced features.
 
@@ -32,7 +32,7 @@ Supported field types
 1. Upload the whole plugin directory to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
-== Changelogs ==
+== Changelog ==
 
 = 1.0.3 =
 * fix assets not loading on admin screen
@@ -40,6 +40,7 @@ Supported field types
 * new "repeater" field type
 * fix notice messages with empty panel_options
 * fix issue with custom fields display
+* fix compatibility with third party plugins
 
 = 1.0.2 =
 * optimize the data saving for custom fields

@@ -97,9 +97,17 @@ function themify_verify_assignments( $assignments ) {
 			if ( ! $visible && ! empty( $assignments['post_type'] ) ) {
 				foreach ( $assignments['post_type'] as $post_type => $posts ) {
 					$posts = array_keys( $posts );
-					if ( ( $post_type == 'post' && is_single() && is_single($posts) ) || ( $post_type == 'page' && (
-							( is_page() && is_page( $posts ) ) || ( ! is_front_page() && is_home() && in_array( get_post_field( 'post_name', get_option('page_for_posts' ) ), $posts ) ) // check for Posts page
-							) ) || ( is_singular( $post_type ) && in_array( $query_object->post_name, $posts ) )
+					if (
+						// Post single
+						( $post_type == 'post' && is_single() && is_single( $posts ) )
+						// Page view
+						|| ( $post_type == 'page' && (
+								( is_page() && is_page( $posts ) )
+								|| ( ! is_front_page() && is_home() && in_array( get_post_field( 'post_name', get_option( 'page_for_posts' ) ), $posts ) ) // check for Posts page
+								|| ( class_exists( 'WooCommerce' ) && function_exists( 'is_shop' ) && in_array( get_post_field( 'post_name', wc_get_page_id( 'shop' ) ), $posts ) && is_shop() ) // check for Shop page
+						) )
+						// Custom Post Types single view check
+						|| ( is_singular( $post_type ) && in_array( $query_object->post_name, $posts ) )
 					) {
 						$visible = true;
 						break;

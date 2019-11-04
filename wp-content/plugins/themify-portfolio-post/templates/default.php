@@ -2,6 +2,8 @@
 /**
  * Controls the display of the_content in portfolio posts
  *
+ * To override this template copy it to <your-theme>/themify-portfolio-posts/default.php and edit.
+ *
  * @var $content the original content output of the post
  */
 ?>

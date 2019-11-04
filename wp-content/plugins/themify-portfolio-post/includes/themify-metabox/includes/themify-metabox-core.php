@@ -12,10 +12,20 @@ class Themify_Metabox {
 
 	private function __construct() {
 		$this->includes();
+		add_action( 'init', array( $this, 'hooks' ), 100 );
+	}
+
+	/**
+	 * Setup plugin actions.
+	 *
+	 * Hooked to init[100] to ensure post types are loaded
+	 * @since 1.0.3
+	 */
+	function hooks() {
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		add_action( 'pre_post_update', array( $this, 'save_postdata' ), 101 );
 		add_action( 'save_post', array( $this, 'save_postdata' ), 101 );
-		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), 1 );
+		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), 11 );
 		add_filter( 'is_protected_meta', array( $this, 'protected_meta' ), 10, 3 );
 	}
 
@@ -94,21 +104,23 @@ class Themify_Metabox {
 		$meta_box_result = $this->panel_options[$meta_box];
 
 		// filter the panels by post type
-		if( $post_type ) {
+		if ( $post_type ) {
 			$meta_box_result = array();
-			foreach( $this->panel_options[$meta_box] as $tab ) {
-				if( isset( $tab['pages'] ) && $tab['pages'] != '' ) {
-					if( ! is_array( $tab['pages'] ) ) {
+			foreach ( $this->panel_options[ $meta_box ] as $tab ) {
+				if ( isset( $tab['pages'] ) && $tab['pages'] != '' ) {
+					if ( ! is_array( $tab['pages'] ) ) {
 						$tab['pages'] = array_map( 'trim', explode( ",", $tab['pages'] ) );
 					}
 				} else {
 					// use whatever the meta box itself uses
-					if(isset( $def['screen'] ) && ( $def = $this->get_meta_box( $meta_box ) )  ) {
+					if ( isset( $def['screen'] ) && ( $def = $this->get_meta_box( $meta_box ) )  ) {
 						$tab['pages'] = $def['screen'];
 					}
 				}
 
-				in_array( $post_type, $tab['pages'], true ) && ( $meta_box_result[] = $tab );
+				if ( ! isset( $tab['pages'] ) || in_array( $post_type, $tab['pages'], true ) ) {
+					$meta_box_result[] = $tab;
+				}
 			}
 		}
 
@@ -225,12 +237,24 @@ class Themify_Metabox {
 		echo '<div class="themify-meta-box-tabs" id="' . $id . '-meta-box">';
 			echo '<ul class="ilc-htabs themify-tabs-heading">';
 			foreach( $tabs as $tab ) {
+				if( isset( $tab['display_callback'] ) && is_callable( $tab['display_callback'] ) ) {
+					$show = (bool) call_user_func( $tab['display_callback'], $tab );
+					if( ! $show ) { // if display_callback returns "false",
+						continue;  // do not output the tab
+					}
+				}
 				$panel_id = isset( $tab['id'] )? $tab['id']: sanitize_title( $tab['name'] );
 				echo '<li><span><a id="' . esc_attr( $panel_id . 't' ) . '" href="' . esc_attr( '#' . $panel_id ) . '">' . esc_html( $tab['name'] ) . '</a></span></li>';
 			}
 			echo '</ul>';
 			echo '<div class="ilc-btabs themify-tabs-body">';
 			foreach( $tabs as $tab ) {
+				if( isset( $tab['display_callback'] ) && is_callable( $tab['display_callback'] ) ) {
+					$show = (bool) call_user_func( $tab['display_callback'], $tab );
+					if( ! $show ) { // if display_callback returns "false",
+						continue;  // do not output the tab
+					}
+				}
 				$panel_id = isset( $tab['id'] )? $tab['id']: sanitize_title( $tab['name'] );
 				?>
 				<div id="<?php echo esc_attr( $panel_id ); ?>" class="ilc-tab themify_write_panel">
@@ -332,17 +356,23 @@ class Themify_Metabox {
 	}
 
 	function admin_enqueue_scripts( $page = '' ) {
-		global $typenow;
+		global $typenow, $wp_scripts;
 
-		wp_register_style( 'themify-datetimepicker', THEMIFY_METABOX_URI . 'css/jquery-ui-timepicker.min.css', array() );
+		$ui = $wp_scripts->query( 'jquery-ui-core' );
+		$protocol = is_ssl() ? 'https': 'http';
+		$url = "$protocol://ajax.googleapis.com/ajax/libs/jqueryui/{$ui->ver}/themes/smoothness/jquery-ui.css";
+		wp_register_style( 'jquery-ui-smoothness', $url, false, null );
+
+		wp_register_style( 'themify-datetimepicker', THEMIFY_METABOX_URI . 'css/jquery-ui-timepicker.min.css', array( 'jquery-ui-smoothness' ) );
 		wp_register_style( 'themify-colorpicker', THEMIFY_METABOX_URI . 'css/jquery.minicolors.css', array() );
 		wp_register_style( 'themify-metabox', THEMIFY_METABOX_URI . 'css/styles.css', array( 'themify-colorpicker', 'themify-datetimepicker' ) );
 
 		wp_register_script( 'meta-box-tabs', THEMIFY_METABOX_URI . 'js/meta-box-tabs.js', array( 'jquery' ), '1.0', true );
 		wp_register_script( 'media-library-browse', THEMIFY_METABOX_URI . 'js/media-lib-browse.js', array( 'jquery'), '1.0', true );
 		wp_register_script( 'themify-colorpicker', THEMIFY_METABOX_URI . 'js/jquery.minicolors.min.js', array( 'jquery' ), null, true );
-		wp_register_script( 'themify-datetimepicker', THEMIFY_METABOX_URI . 'js/jquery-ui-timepicker.min.js', array( 'jquery', 'jquery-ui-datepicker'/*, 'jquery-ui-slider'*/ ), false, true );
-		wp_register_script( 'themify-metabox', THEMIFY_METABOX_URI . 'js/scripts.js', array( 'jquery', 'meta-box-tabs', 'media-library-browse', 'jquery-ui-tabs', 'themify-colorpicker', 'themify-datetimepicker' ), '1.0', true );
+		$themify_metabox_scripts = array( 'jquery', 'meta-box-tabs', 'media-library-browse', 'jquery-ui-tabs', 'themify-colorpicker' );
+
+		wp_register_script( 'themify-metabox', THEMIFY_METABOX_URI . 'js/scripts.js', $themify_metabox_scripts, '1.0', true );
 		wp_register_script( 'themify-plupload', THEMIFY_METABOX_URI . 'js/plupload.js', array( 'jquery', 'themify-metabox' ), null, true );
 
 		// Inject variable for Plupload
@@ -373,6 +403,10 @@ class Themify_Metabox {
 			)
 		);
 		wp_localize_script( 'themify-metabox', 'global_plupload_init', $global_plupload_init );
+		wp_localize_script( 'themify-metabox', 'TF_Metabox', array(
+			'url' => THEMIFY_METABOX_URI,
+			'includes_url' => includes_url(),
+		) );
 
 		do_action( 'themify_metabox_register_assets' );
 
@@ -409,6 +443,8 @@ class Themify_Metabox {
 	 */
 	function protected_meta( $protected, $meta_key, $meta_type ) {
 		global $typenow;
+
+		if ( doing_action('wp_loaded') ) return; // make sure triggered on safe event #7507
 
 		static $protected_metas = array();
 		if( $protected_metas == null ) {

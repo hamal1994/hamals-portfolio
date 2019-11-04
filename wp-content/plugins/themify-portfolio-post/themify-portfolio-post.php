@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name:  Themify Portfolio Post
-Version:      1.0.8
+Version:      1.1.1
 Author:       Themify
 Author URI:   https://themify.me
 Description:  This plugin will add Portfolio post type.

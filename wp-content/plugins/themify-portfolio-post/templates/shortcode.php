@@ -2,6 +2,8 @@
 /**
  * Template to display the themify_portfolio_posts shortcode
  *
+ * To override this template copy it to <your-theme>/themify-portfolio-posts/shortcode.php and edit.
+ *
  * @var $query the WP_Query object of queried posts
  * @var $posts result of $query->query()
  * @var $atts parsed shortcode attributes

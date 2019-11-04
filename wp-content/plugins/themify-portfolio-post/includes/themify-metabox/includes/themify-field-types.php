@@ -5,6 +5,8 @@ foreach( array( 'image', 'audio', 'postmeta', 'post_id_info', 'multi', 'date', '
 }
 add_action( 'wp_ajax_themify_metabox_media_lib_browse', 'themify_metabox_media_lib_browse' );
 add_action( 'wp_ajax_themify_plupload', 'themify_wp_ajax_plupload_image' );
+add_action( 'wp_ajax_themify_create_inner_popup_page', 'themify_ajax_create_inner_page' );
+add_action( 'wp_ajax_themify_create_popup_page_pagination', 'themify_ajax_create_page_pagination' );
 
 function themify_meta_field_image( $args ) {
 	extract( $args, EXTR_OVERWRITE );
@@ -17,34 +19,20 @@ function themify_meta_field_image( $args ) {
 		'fields' => $meta_box['name']
 	);
 
-	// backward compatibility with Themify framework, image fields that are used to replace the Featured Image
-	$themify_featimg_field = function_exists( 'themify_is_thumbnail_field' ) && themify_is_thumbnail_field( $meta_box['name'] ) ? true : false;
-	if( $themify_featimg_field ) {
-		$featimg_uploader_args['featured'] = $meta_box['name'];
-	}
-
-	$this_attachment_id = '';
-	if( has_post_thumbnail() && $themify_featimg_field ) {
-		$this_attachment_id = get_post_thumbnail_id( $post_id );
-		$thumb = wp_get_attachment_image_src( $this_attachment_id );
-		$thumb_src = $thumb[0];
-	} elseif( !$themify_featimg_field && ( $this_attachment_id = get_post_meta( $post_id, '_'.$meta_box['name'].'_attach_id', true ) ) ) {
-		$thumb = wp_get_attachment_image_src( $this_attachment_id );
-		$thumb_src = $thumb[0];
-	} else {
-		$thumb_src = $meta_value;
-	}
 	?>
 
-	<div id="<?php echo esc_attr( 'remove-' . $meta_box['name'] ); ?>" class="themify_featimg_remove <?php if( $thumb_src == '' ) echo 'hide' ?>">
+	<div id="<?php echo esc_attr( 'remove-' . $meta_box['name'] ); ?>" class="themify_featimg_remove <?php if( $meta_value == '' ) echo 'hide' ?>">
 		<a data-attachid="<?php echo esc_attr( get_post_meta( $post_id, '_' . $meta_box['name'] . '_attach_id', true ) ); ?>" href="#"><?php _e( 'Remove image', 'themify' ); ?></a>
 	</div>
 
 	<?php
-	if( $thumb_src ) {
-		$thumb = wp_get_attachment_image_src( $this_attachment_id, 'full');
-		$full_src = ( false !== $thumb ) ? $thumb[0] : $thumb_src;
-		echo '<div class="themify_upload_preview" style="display:block;"><a href="' . esc_url( $full_src ) . '" target="_blank"><img src="' . esc_url( $thumb_src ) . '" width="40" alt="' . esc_attr__( 'Post Image', 'themify' ) . '" /></a></div>';
+	if( $meta_value ) {
+		echo '
+		<div class="themify_upload_preview" style="display:block;">
+			<a href="' . esc_url( $meta_value ) . '" target="_blank">
+				<img src="' . esc_url( $meta_value ) . '" style="width: 40px; height: 40px;" alt="' . esc_attr__( 'Post Image', 'themify' ) . '" />
+			</a>
+		</div>';
 	} else {
 		echo '<div class="themify_upload_preview"></div>';
 	}
@@ -66,22 +54,11 @@ function themify_meta_field_image( $args ) {
 			var $remove = $('#remove-<?php echo esc_js( $meta_box['name'] ); ?>');
 			$remove.find('a').on('click', function(e){
 				e.preventDefault();
-				var $this = $(this);
-				$.post(
-					ajaxurl, {
-						'action': 'themify_remove_post_image',
-						'postid': <?php echo esc_js( $post_id ); ?>,
-						<?php if( !$themify_featimg_field )
-								echo '\'attach_id\': $this.data(\'attachid\'),'; ?>
-						'customfield' : '<?php echo esc_js( $meta_box['name'] ); ?>',
-						'nonce' : '<?php echo esc_js( $themify_custom_panel_nonce ); ?>'
-					},
-					function() {
-						$this.parent().parent().find('.themify_upload_field').val('');
-						$this.parent().parent().find('.themify_upload_preview').fadeOut();
-						$remove.addClass('hide');
-					}
-				);
+				$( this ).closest( '.themify_field_row' )
+					.find( '.themify_upload_field' ).val( '' )
+						.end()
+					.find( '.themify_upload_preview' ).fadeOut();
+				$remove.addClass( 'hide' );
 			});
 		});
 	</script>
@@ -514,7 +491,7 @@ function themify_meta_field_checkbox( $args ) {
 	$meta_value = $args['meta_value'];
 	extract($args, EXTR_OVERWRITE);
 
-	$checked = $meta_value ? 'checked="checked"' : $checked = '';
+	$checked = $meta_value || ( isset( $meta_box['default'] ) && 'checked' === $meta_box['default'] && 'auto-draft' === get_post_status() ) ? 'checked="checked"' : '';
 
 	$html = sprintf('<input type="checkbox" id="%s" name="%s" %s class="%s" data-val="%s" />',
 		esc_attr( $meta_box['name'] ), esc_attr( $meta_box['name'] ), $checked, esc_attr( $meta_box['name'] ).'-toggle-control', esc_attr( $meta_box['name'] ));
@@ -706,6 +683,231 @@ function themify_meta_field_get_description( $desc = '' ) {
 	return ( isset( $desc ) && '' != $desc ) ? '<span class="themify_field_description">' . wp_kses_post( $desc ) . '</span>' : '';
 }
 
+function themify_ajax_create_page_pagination() {
+	$current_page = isset( $_POST['current_page'] ) ? $_POST['current_page'] : 1;
+	$num_of_pages = isset( $_POST['num_of_pages'] ) ? $_POST['num_of_pages'] : 0;
+	echo themify_create_page_pagination($current_page, $num_of_pages);
+	die;
+}
+
+/**
+ * Render pagination for specific page.
+ *
+ * @param Integer $current_page The current page that needs to be rendered.
+ * @param Integer $num_of_pages The number of all pages.
+ *
+ * @return String The HTML with pagination.
+ */
+function themify_create_page_pagination( $current_page, $num_of_pages ) {
+	$links_in_the_middle = 4;
+	$links_in_the_middle_min_1 = $links_in_the_middle - 1;
+	$first_link_in_the_middle   = $current_page - floor( $links_in_the_middle_min_1 / 2 );
+	$last_link_in_the_middle    = $current_page + ceil( $links_in_the_middle_min_1 / 2 );
+	if ( $first_link_in_the_middle <= 0 ) {
+		$first_link_in_the_middle = 1;
+	}
+	if ( ( $last_link_in_the_middle - $first_link_in_the_middle ) != $links_in_the_middle_min_1 ) {
+		$last_link_in_the_middle = $first_link_in_the_middle + $links_in_the_middle_min_1;
+	}
+	if ( $last_link_in_the_middle > $num_of_pages ) {
+		$first_link_in_the_middle = $num_of_pages - $links_in_the_middle_min_1;
+		$last_link_in_the_middle  = (int) $num_of_pages;
+	}
+	if ( $first_link_in_the_middle <= 0 ) {
+		$first_link_in_the_middle = 1;
+	}
+	$pagination = '';
+	if ( $current_page != 1 ) {
+		$pagination .= '<a href="/page/' . ( $current_page - 1 ) . '" class="prev page-numbers"><span class="page-numbers-icon"></span></a>';
+	}
+	if ( $first_link_in_the_middle >= 3 && $links_in_the_middle < $num_of_pages ) {
+		$pagination .= '<a href="/page/" class="page-numbers">1</a>';
+
+		if ( $first_link_in_the_middle != 2 ) {
+			$pagination .= '<span class="page-numbers extend">...</span>';
+		}
+	}
+	for ( $i = $first_link_in_the_middle; $i <= $last_link_in_the_middle; $i ++ ) {
+		if ( $i == $current_page ) {
+			$pagination .= '<span class="page-numbers current">' . $i . '</span>';
+		} else {
+			$pagination .= '<a href="/page/' . $i . '" class="page-numbers">' . $i . '</a>';
+		}
+	}
+	if ( $last_link_in_the_middle < $num_of_pages ) {
+		if ( $last_link_in_the_middle != ( $num_of_pages - 1 ) ) {
+			$pagination .= '<span class="page-numbers extend">...</span>';
+		}
+		$pagination .= '<a href="/page/' . $num_of_pages . '" class="page-numbers">' . $num_of_pages . '</a>';
+	}
+	if ( $current_page != $last_link_in_the_middle ) {
+		$pagination .= '<a href="/page/' . ( $current_page + $i ) . '" class="next page-numbers"><span class="page-numbers-icon"></span></a>';
+	}
+
+	return $pagination;
+}
+
+function themify_ajax_create_inner_page() {
+    $selected = array();
+	if ( isset( $_POST['post_id'] ) ) {
+		$post_id = $_POST['post_id'];
+		$selected = get_post_meta( $post_id, 'popup_show', TRUE );
+	}
+	$type= isset( $_POST['type'] ) ? $_POST['type'] : 'pages';
+	echo themify_create_inner_page($type, $selected);
+	die;
+}
+
+/**
+ * Renders pages, posts types and categories items based on current page.
+ *
+ * @param string $type The type of items to render.
+ * @param array $selected The array of all selected options.
+ *
+ * @return string The HTML to render items as HTML.
+ */
+function themify_create_inner_page( $type, $selected ) {
+	$posts_per_page = 26;
+	$output = '';
+	switch ($type) {
+		case 'page':
+			$key = 'page';
+			$posts = get_posts( array( 'post_type' => $key, 'posts_per_page' => -1, 'post_status' => 'publish', 'order' => 'ASC', 'orderby' => 'title',  'no_found_rows' => true) );
+			if( ! empty( $posts ) ) {
+				$i = 1;
+				$page_id = 1;
+				$num_of_single_pages = count($posts);
+				$num_of_pages = (int) ceil( $num_of_single_pages / $posts_per_page );
+				$output .= '<div class="themify-assignment-items-inner" data-items="' . $num_of_single_pages . '" data-pages="' . $num_of_pages . '">';
+				$output .= '<div class="themify-assignment-items-page themify-assignment-items-page-' . $page_id . '">';
+				foreach ( $posts as $post ) :
+					if ( $post->post_parent > 0 ) {
+						$post->post_name = str_replace( home_url(), '', get_permalink( $post->ID ) );
+					}
+					$checked = isset( $selected['post_type'][ $key ][ $post->post_name ] ) ? checked( $selected['post_type'][ $key ][ $post->post_name ], 'on', false ) : '';
+					/* note: slugs are more reliable than IDs, they stay unique after export/import */
+					$output .= '<label><input type="checkbox" name="popup_show[post_type][' . $key . '][' . $post->post_name . ']"' . $checked . ' />' . $post->post_title . '</label>';
+					if ( $i === ($page_id * $posts_per_page) ) {
+						$output .= '</div>';
+						$page_id++;
+						$output .= '<div class="themify-assignment-items-page themify-assignment-items-page-' . $page_id . ' is-hidden">';
+					}
+					$i++;
+				endforeach;
+				$output .= '</div>';
+				if ( $num_of_pages > 1 ) {
+					$output .= '<div class="themify-assignment-pagination">';
+					$output .= themify_create_page_pagination( 1, $num_of_pages );
+					$output .= '</div>';
+				}
+				$output .= '</div>';
+			}
+			break;
+
+		case 'category_single':
+			$key = 'category_single';
+			$terms = get_terms( 'category', array( 'hide_empty' => true ) );
+			if ( ! empty( $terms ) ) {
+				$i                   = 1;
+				$page_id             = 1;
+				$num_of_single_pages = count( $terms );
+				$num_of_pages        = (int) ceil( $num_of_single_pages / $posts_per_page );
+				$output              .= '<div class="themify-assignment-items-inner" data-items="' . $num_of_single_pages . '" data-pages="' . $num_of_pages . '">';
+				$output              .= '<div class="themify-assignment-items-page themify-assignment-items-page-' . $page_id . '">';
+				foreach ( $terms as $term ) :
+					$checked = isset( $selected['tax'][ $key ][ $term->slug ] ) ? checked( $selected['tax'][ $key ][ $term->slug ], 'on', false ) : '';
+					$output  .= '<label><input type="checkbox" name="popup_show[tax][' . $key . '][' . $term->slug . ']" ' . $checked . ' />' . $term->name . '</label>';
+					if ( $i === ( $page_id * $posts_per_page ) ) {
+						$output .= '</div>';
+						$page_id ++;
+						$output .= '<div class="themify-assignment-items-page themify-assignment-items-page-' . $page_id . ' is-hidden">';
+					}
+					$i++;
+				endforeach;
+				$output .= '</div>';
+				if ( $num_of_pages > 1 ) {
+					$output .= '<div class="themify-assignment-pagination">';
+					$output .= themify_create_page_pagination( 1, $num_of_pages );
+					$output .= '</div>';
+				}
+				$output .= '</div>';
+			}
+			break;
+
+		case 'category':
+			$key = 'category';
+			$terms = get_terms( 'category', array( 'hide_empty' => true ) );
+			if ( ! empty( $terms ) ) {
+				$i                   = 1;
+				$page_id             = 1;
+				$num_of_single_pages = count( $terms );
+				$num_of_pages        = (int) ceil( $num_of_single_pages / $posts_per_page );
+				$output              .= '<div class="themify-assignment-items-inner" data-items="' . $num_of_single_pages . '" data-pages="' . $num_of_pages . '">';
+				$output              .= '<div class="themify-assignment-items-page themify-assignment-items-page-' . $page_id . '">';
+				foreach ( $terms as $term ) :
+					$checked = isset( $selected['tax'][ $key ][ $term->slug ] ) ? checked( $selected['tax'][ $key ][ $term->slug ], 'on', false ) : '';
+					$output  .= '<label><input type="checkbox" name="popup_show[tax][' . $key . '][' . $term->slug . ']" ' . $checked . ' />' . $term->name . '</label>';
+					if ( $i === ( $page_id * $posts_per_page ) ) {
+						$output .= '</div>';
+						$page_id ++;
+						$output .= '<div class="themify-assignment-items-page themify-assignment-items-page-' . $page_id . ' is-hidden">';
+					}
+					$i++;
+				endforeach;
+				$output .= '</div>';
+				if ( $num_of_pages > 1 ) {
+					$output .= '<div class="themify-assignment-pagination">';
+					$output .= themify_create_page_pagination( 1, $num_of_pages );
+					$output .= '</div>';
+				}
+				$output .= '</div>';
+			}
+			break;
+
+		default :
+			$post_types = get_post_types( array( 'public' => true ) );
+			unset( $post_types['page'] );
+			$post_types = array_map( 'get_post_type_object', $post_types );
+			$post_id = 1;
+			foreach ( $post_types as $key => $post_type ) {
+				$output .= '<div id="popup_show-assignment-tab-' . $key . '" class="themify-assignment-inner-tab '. ($post_id > 1 ? 'is-hidden' : '') .'">';
+				$posts = get_posts( array( 'post_type' => $key, 'posts_per_page' => -1, 'post_status' => 'publish', 'order' => 'ASC', 'orderby' => 'title',  'no_found_rows' => true ) );
+				if ( ! empty( $posts ) ) {
+					$i                   = 1;
+					$page_id             = 1;
+					$num_of_single_pages = count( $posts );
+					$num_of_pages        = (int) ceil( $num_of_single_pages / $posts_per_page );
+					$output              .= '<div class="themify-assignment-items-inner" data-items="' . $num_of_single_pages . '" data-pages="' . $num_of_pages . '">';
+					$output              .= '<div class="themify-assignment-items-page themify-assignment-items-page-' . $page_id . '">';
+					foreach ( $posts as $post ) :
+						$checked = isset( $selected['post_type'][ $key ][ $post->post_name ] ) ? checked( $selected['post_type'][ $key ][ $post->post_name ], 'on', false ) : '';
+						/* note: slugs are more reliable than IDs, they stay unique after export/import */
+						$output .= '<label><input type="checkbox" name="' . esc_attr( 'popup_show[post_type][' . $key . '][' . $post->post_name . ']' ) . '" ' . $checked . ' />' . esc_html( $post->post_title ) . '</label>';
+						if ( $i === ( $page_id * $posts_per_page ) ) {
+							$output .= '</div>';
+							$page_id ++;
+							$output .= '<div class="themify-assignment-items-page themify-assignment-items-page-' . $page_id . ' is-hidden">';
+						}
+						$i++;
+					endforeach;
+					$output .= '</div>';
+					if ( $num_of_pages > 1 ) {
+						$output .= '<div class="themify-assignment-pagination">';
+						$output .= themify_create_page_pagination( 1, $num_of_pages );
+						$output .= '</div>';
+					}
+				}
+				$output .= '</div></div></div>';
+				$post_id++;
+			}
+			$output .= '</div>';
+			break;
+	}
+	wp_reset_postdata();
+
+	return $output;
+}
+
 function themify_meta_field_assignments( $args ) {
 	extract( $args );
 	$field = $meta_box;
@@ -736,10 +938,10 @@ function themify_meta_field_assignments( $args ) {
 
 	/* build the tab links */
 	$output .= '<li><a href="#' . $pre . '-assignment-tab-general">' . __( 'General', 'themify' ) . '</a></li>';
-	$output .= '<li><a href="#' . $pre . '-assignment-tab-pages">' . __( 'Pages', 'themify' ) . '</a></li>';
-	$output .= '<li><a href="#' . $pre . '-assignment-tab-categories-singles">' . __( 'Category Singles', 'themify' ) . '</a></li>';
-	$output .= '<li><a href="#' . $pre . '-assignment-tab-categories">' . __( 'Categories', 'themify' ) . '</a></li>';
-	$output .= '<li><a href="#' . $pre . '-assignment-tab-post-types">' . __( 'Post Types', 'themify' ) . '</a></li>';
+	$output .= '<li><a href="#' . $pre . '-assignment-tab-pages" class="themify-popup-visibility-tab" data-type="page">' . __( 'Pages', 'themify' ) . '</a></li>';
+	$output .= '<li><a href="#' . $pre . '-assignment-tab-categories-singles" class="themify-popup-visibility-tab" data-type="category_single">' . __( 'Category Singles', 'themify' ) . '</a></li>';
+	$output .= '<li><a href="#' . $pre . '-assignment-tab-categories" class="themify-popup-visibility-tab" data-type="category">' . __( 'Categories', 'themify' ) . '</a></li>';
+	$output .= '<li><a href="#' . $pre . '-assignment-tab-post-types" class="themify-popup-visibility-tab" data-type="post">' . __( 'Post Types', 'themify' ) . '</a></li>';
 	$output .= '<li><a href="#' . $pre . '-assignment-tab-taxonomies">' . __( 'Taxonomies', 'themify' ) . '</a></li>';
 	$output .= '<li><a href="#' . $pre . '-assignment-tab-userroles">' . __( 'User Roles', 'themify' ) . '</a></li>';
 	$output .= '</ul>';
@@ -777,57 +979,25 @@ function themify_meta_field_assignments( $args ) {
 
 	$output .= '</div>'; // tab-general
 	// Pages tab
-	$output .= '<div id="' . $pre . '-assignment-tab-pages" class="themify-assignment-options clearfix">';
-	$key = 'page';
-	$posts = get_posts( array( 'post_type' => $key, 'posts_per_page' => -1, 'status' => 'published', 'orderby' => 'title', 'order' => 'ASC' ) );
-	if ( ! empty( $posts ) ) : foreach ( $posts as $post ) :
-			$checked = isset( $selected['post_type'][$key][$post->post_name] ) ? checked($selected['post_type'][$key][$post->post_name], 'on', false) : '';
-			/* note: slugs are more reliable than IDs, they stay unique after export/import */
-			$output .= '<label><input type="checkbox" name="' . esc_attr( $pre . '[post_type][' . $key . '][' . $post->post_name . ']' ) . '" ' . $checked . ' />' . esc_html( $post->post_title ) . '</label>';
-		endforeach;
-	endif;
+    wp_reset_postdata();
+	$output .= '<div id="' . $pre . '-assignment-tab-pages" class="themify-assignment-options themify-assignment-type-options clearfix"  data-type="page" data-post-id="' . get_the_ID() . '">';
 	$output .= '</div>'; // tab-pages
 	// Category Singles tab
-	$output .= '<div id="' . $pre . '-assignment-tab-categories-singles" class="themify-assignment-options clearfix">';
-	$key = 'category_single';
-	$terms = get_terms( 'category', array( 'hide_empty' => true ) );
-	if ( ! empty( $terms ) ) :
-		foreach ( $terms as $term ) :
-			$checked = isset( $selected['tax'][$key][$term->slug] ) ? checked( $selected['tax'][$key][$term->slug], 'on', false ) : '';
-			$output .= '<label><input type="checkbox" name="' . $pre . '[tax][' . $key . '][' . $term->slug . ']" ' . $checked . ' />' . $term->name . '</label>';
-		endforeach;
-	endif;
+	$output .= '<div id="' . $pre . '-assignment-tab-categories-singles" class="themify-assignment-options themify-assignment-type-options clearfix" data-type="category_single">';
 	$output .= '</div>';
 
 	// Categories tab
-	$output .= '<div id="' . $pre . '-assignment-tab-categories" class="themify-assignment-options clearfix">';
-	$key = 'category';
-	if ( ! empty( $terms ) ) :
-		foreach ( $terms as $term ) :
-			$checked = isset( $selected['tax'][$key][$term->slug] ) ? checked( $selected['tax'][$key][$term->slug], 'on', false ) : '';
-			$output .= '<label><input type="checkbox" name="' . esc_attr( $pre . '[tax][' . $key . '][' . $term->slug . ']' ) . '" ' . $checked . ' />' . esc_html( $term->name ) . '</label>';
-		endforeach;
-	endif;
+	$output .= '<div id="' . $pre . '-assignment-tab-categories" class="themify-assignment-options themify-assignment-type-options clearfix" data-type="category">';
 	$output .= '</div>'; // tab-categories
 	// Post types tab
-	$output .= '<div id="' . $pre . '-assignment-tab-post-types" class="themify-assignment-options clearfix">';
+	$output .= '<div id="' . $pre . '-assignment-tab-post-types" class="themify-assignment-options clearfix" data-type="post">';
 	$output .= '<div id="' . $pre . '-themify-assignment-post-types-inner-tabs" class="themify-assignment-inner-tabs">';
 	$output .= '<ul class="inline-tabs clearfix">';
 	foreach ( $post_types as $key => $post_type ) {
 		$output .= '<li><a href="#' . $pre . '-assignment-tab-' . $key . '">' . esc_html( $post_type->label ) . '</a></li>';
 	}
 	$output .= '</ul>';
-	foreach ( $post_types as $key => $post_type ) {
-		$output .= '<div id="' . $pre . '-assignment-tab-' . $key . '" class="clearfix">';
-		$posts = get_posts( array( 'post_type' => $key, 'posts_per_page' => -1, 'status' => 'published', 'orderby' => 'title', 'order' => 'ASC' ) );
-		if ( ! empty( $posts ) ) : foreach ( $posts as $post ) :
-				$checked = isset( $selected['post_type'][$key][$post->post_name] ) ? checked( $selected['post_type'][$key][$post->post_name], 'on', false ) : '';
-				/* note: slugs are more reliable than IDs, they stay unique after export/import */
-				$output .= '<label><input type="checkbox" name="' . esc_attr( $pre . '[post_type][' . $key . '][' . $post->post_name . ']' ) . '" ' . $checked . ' />' . esc_html( $post->post_title ) . '</label>';
-			endforeach;
-		endif;
-		$output .= '</div>';
-	}
+	$output .= '<div class="themify-assignment-type-options clearfix" data-type="post"></div>';
 	$output .= '</div>';
 	$output .= '</div>'; // tab-post-types
 	// Taxonomies tab
