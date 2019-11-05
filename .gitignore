@@ -69,3 +69,6 @@ hamals-portfolio_dev_2019-09-18T11-46-35_UTC_database.sql
 ################
 node_modules
 wp-config.php
+
+# Ignore uploaded images into the local #
+.tmb
