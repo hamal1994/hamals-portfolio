@@ -264,7 +264,7 @@ function name_directory_show_directory($attributes)
         $index_letters = $starting_letters;
     }
 
-    var_dump($attributes);
+    print_f($attributes);
 
 
     foreach($index_letters as $index_letter)
