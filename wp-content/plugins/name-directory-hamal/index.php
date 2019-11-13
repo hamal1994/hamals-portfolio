@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: Name Directory
+ * Plugin Name: Name Directory Hamal
  * Plugin URI: https://jeroenpeters.dev/wordpress-plugin-name-directory/
  * Description: A Name Directory, i.e. for animal names or to create a glossary. Visitors can add, search or just browse all names.
  * Version: 1.15.2
- * Author: Jeroen Peters
+ * Author: Hamal Patel
  * Author URI: https://jeroenpeters.dev
  * Text Domain: name-directory
  * Domain Path: /translation
