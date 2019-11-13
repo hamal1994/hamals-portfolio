@@ -328,7 +328,7 @@ function name_directory_show_directory($attributes)
         if(empty($directory['name_term']))
         {
             var_dump($num_names);
-            echo sprintf(__('There are currently %d names TEST in this directory', 'name-directory'), $num_names);
+            echo sprintf(__('There are currently %d names in this directory', 'name-directory'), $num_names);
         }
         else
         {
@@ -367,7 +367,7 @@ function name_directory_show_directory($attributes)
         }
         else
         {
-            echo sprintf(__('There are %d %s in this directory beginning with the letter %s.', 'name-directory'), $num_names, $directory['name_term'], $name_filter['character']);
+            echo sprintf(__('There are %d %s in TEST this directory beginning with the letter %s.', 'name-directory'), $num_names, $directory['name_term'], $name_filter['character']);
         }
     }
     echo  '</div>';
