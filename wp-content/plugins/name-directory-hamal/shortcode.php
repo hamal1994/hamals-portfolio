@@ -220,7 +220,7 @@ function name_directory_show_directory($attributes)
     $directory = name_directory_get_directory_properties($dir);
     $names = name_directory_get_directory_names($directory, $name_filter);
     $num_names = count($names);
-    var_dump($directory);
+    var_dump($name_filter);
     if(isset($_GET['show_submitform']))
     {
         return name_directory_show_submit_form($dir, name_directory_make_plugin_url('name_directory_startswith','show_submitform'));
