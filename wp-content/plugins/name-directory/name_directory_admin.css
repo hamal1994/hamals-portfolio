@@ -1,0 +1,36 @@
+/**
+ * Basic styling for admin
+ * This file is part of the Name Directory plugin for WordPress
+ */
+table.name_directory_names td {
+    border-bottom: 1px solid #F0F0F0;
+}
+
+table.name-directory td.post-title.page-title.column-title {
+    padding-left: 0;
+}
+
+table.name-directory td.post-title.page-title.column-title strong span {
+    font-weight: normal;
+}
+
+.name_directory_export p {
+    line-height: 2.5;
+}
+
+.name_directory_embed_code {
+    display: none;
+}
+
+.name_directory_embed_code input {
+    text-align: center;
+    padding: 8px 5px;
+}
+
+.name_directory_widest {
+    width: 100%;
+}
+
+.toggle_published:hover {
+    cursor: pointer;
+}
