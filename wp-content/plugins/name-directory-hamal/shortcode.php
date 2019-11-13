@@ -327,6 +327,7 @@ function name_directory_show_directory($attributes)
     {
         if(empty($directory['name_term']))
         {
+            var_dump($num_names);
             echo sprintf(__('There are currently %d names in this directory', 'name-directory'), $num_names);
         }
         else
