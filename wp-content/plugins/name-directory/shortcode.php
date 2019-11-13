@@ -278,7 +278,7 @@ function name_directory_show_directory($attributes)
             $extra_classes .= ' name_directory_empty';
         }
 
-        echo ' <a class="name_directory_startswith ' . $extra_classes . '" href="' . $letter_url . urlencode($index_letter) . $jump_location . '">' . strtoupper($index_letter) . '</a> ';
+        echo ' <a class="yay name_directory_startswith ' . $extra_classes . '" href="' . $letter_url . urlencode($index_letter) . $jump_location . '">' . strtoupper($index_letter) . '</a> ';
     }
 
     if(! empty($directory['show_submit_form']))
