@@ -687,7 +687,7 @@ function name_directory_names()
     </form>
 
     <p>
-        <a class='s_all' href='<?php echo $wp_url_path; ?>&status=all'><?php _e('all', 'name-directory'); ?></a> |
+        <a class='s_all' href='<?php echo $wp_url_path; ?>&status=all'><?php _e('all', 'name-directory'); ?></a> |q
         <a class='s_published' href='<?php echo $wp_url_path; ?>&status=published'><?php _e('published', 'name-directory'); ?></a> |
         <a class='s_unpublished' href='<?php echo $wp_url_path; ?>&status=unpublished'><?php _e('unpublished', 'name-directory'); ?></a>
     </p>
@@ -1066,6 +1066,7 @@ function name_directory_import()
     echo ' | ';
     echo '<a href="' . $overview_url . '">' . __('Go to Name Directory Overview', 'name-directory') . '</a>';
 }
+
 
 
 /**
