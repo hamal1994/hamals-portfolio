@@ -220,7 +220,7 @@ function name_directory_show_directory($attributes)
     $directory = name_directory_get_directory_properties($dir);
     $names = name_directory_get_directory_names($directory, $name_filter);
     $num_names = count($names);
-
+    var_dump($directory);
     if(isset($_GET['show_submitform']))
     {
         return name_directory_show_submit_form($dir, name_directory_make_plugin_url('name_directory_startswith','show_submitform'));
@@ -327,7 +327,6 @@ function name_directory_show_directory($attributes)
     {
         if(empty($directory['name_term']))
         {
-            var_dump($num_names);
             echo sprintf(__('There are currently %d names in this directory', 'name-directory'), $num_names);
         }
         else
@@ -367,7 +366,7 @@ function name_directory_show_directory($attributes)
         }
         else
         {
-            echo sprintf(__('There are %d %s in TEST this directory beginning with the letter %s.', 'name-directory'), $num_names, $directory['name_term'], $name_filter['character']);
+            echo sprintf(__('There are %d %s in this directory beginning with the letter %s.', 'name-directory'), $num_names, $directory['name_term'], $name_filter['character']);
         }
     }
     echo  '</div>';
