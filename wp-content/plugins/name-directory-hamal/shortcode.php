@@ -219,6 +219,8 @@ function name_directory_show_directory($attributes)
     $letter_url = name_directory_make_plugin_url('name_directory_startswith', 'name-directory-search-value');
     $directory = name_directory_get_directory_properties($dir);
     $names = name_directory_get_directory_names($directory, $name_filter);
+
+    $allNames = name_directory_get_directory_names($directory, '');
     $num_names = count($names);
     if(isset($_GET['show_submitform']))
     {
@@ -264,8 +266,23 @@ function name_directory_show_directory($attributes)
         $index_letters = $starting_letters;
     }
 
-    var_dump($attributes);
+    echo '<pre>' , var_dump($names) , '</pre>';
 
+    // To display the number next to each letter, the number is the total amount of terms for a specific:
+    // $name is referring to one term, for example 'apache', and
+    $letterCount = array();
+    foreach($allNames as $name) {
+        //uses associative array. name['letter'] is the 'letter' item in an array. eg. myArray['letter'] = 't'
+        $letter = $name['letter'];
+        if (isset($letterCount[$letter])) {
+            //letterCount['c'] = (letterCount['c'] current value, plus one)
+            $letterCount[$letter] = $letterCount[$letter] + 1;
+        }
+        else {
+            $letterCount[$letter] = 1;
+        }
+    }
+    
     foreach($index_letters as $index_letter)
     {
         $extra_classes = '';
@@ -278,8 +295,15 @@ function name_directory_show_directory($attributes)
         {
             $extra_classes .= ' name_directory_empty';
         }
-
-        echo ' <a class="name_directory_startswith ' . $extra_classes . '" href="' . $letter_url . urlencode($index_letter) . $jump_location . '">' . strtoupper($index_letter) . '</a> ';
+        // We set the default variable over here to be blank
+        $currentCount = "";
+        // The $currentCount variable then changes to be another number because of this for each loop:
+        // When there is a 
+        if(isset($letterCount[$index_letter])) {
+            $currentCount = "(".$letterCount[$index_letter].")";
+        }
+        // We added in the $currentcount variable to the echo down here so the total number can show up next to each letter
+        echo ' <a class="name_directory_startswith ' . $extra_classes . '" href="' . $letter_url . urlencode($index_letter) . $jump_location . '">' . strtoupper($index_letter) . $currentCount . '</a> ';
     }
 
     if(! empty($directory['show_submit_form']))
