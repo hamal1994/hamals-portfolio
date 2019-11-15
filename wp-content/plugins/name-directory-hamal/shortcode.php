@@ -266,7 +266,7 @@ function name_directory_show_directory($attributes)
         $index_letters = $starting_letters;
     }
 
-    echo '<pre>' , var_dump($names) , '</pre>';
+    //echo '<pre>' , var_dump($names) , '</pre>';
 
     // To display the number next to each letter, the number is the total amount of terms for a specific:
     // $name is referring to one term, for example 'apache', and
